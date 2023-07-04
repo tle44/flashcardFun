@@ -1,11 +1,17 @@
 package myflashcardproject;
 
 import javax.swing.*;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.Style;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -18,7 +24,7 @@ public class FlashcardStudyScreen {
     private JFrame frame;
     private JLabel flashcardLabel;
     private JPanel panel;
- 
+    private JTextPane flashcardTextPane;
 
     public FlashcardStudyScreen(List<Flashcard> flashcards, DefaultListModel<Flashcard> flashcardListModel) {
         this.flashcards = flashcards;
@@ -31,46 +37,52 @@ public class FlashcardStudyScreen {
             JOptionPane.showMessageDialog(null, "No flashcards available.", "Information", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        
-        frame = new JFrame("Flashcard Study");
+
+        frame = new JFrame();
+        frame.setBounds(100, 100, 853, 502);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(800, 700);
-        frame = new JFrame("Flashcard Study");
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(800, 700);
+        frame.setLayout(null);
 
-        panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+        panel.setBounds(0, 0, 853, 502);
+        frame.add(panel);
 
-        JPanel cardPanel = new JPanel();
-        cardPanel.setBackground(Color.WHITE);
-        cardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        cardPanel.setPreferredSize(new Dimension(600, 400));
-        flashcardLabel = new JLabel();
-        flashcardLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        flashcardLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        cardPanel.add(flashcardLabel);
+        flashcardTextPane = new JTextPane();
+        flashcardTextPane.setBounds(47, 32, 756, 344);
+        flashcardTextPane.setFont(new Font("Arial", Font.PLAIN, 16));
+        flashcardTextPane.setEditable(false);
+        flashcardTextPane.setFocusable(false);
 
-        
-        panel.add(cardPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(flashcardTextPane);
+        scrollPane.setBounds(47, 32, 756, 344);
+
+        panel.add(scrollPane);
+
+        JButton previousButton = new JButton("Previous");
+        previousButton.setBounds(43, 405, 117, 29);
+        panel.add(previousButton);
+
+        JButton flipButton = new JButton("Flip");
+        flipButton.setBounds(174, 405, 117, 29);
+        panel.add(flipButton);
 
         JButton nextButton = new JButton("Next");
-        JButton previousButton = new JButton("Previous");
-        JButton flipButton = new JButton("Flip");
+        nextButton.setBounds(303, 405, 117, 29);
+        panel.add(nextButton);
+
         JButton addButton = new JButton("Add Flashcard");
-        JButton deleteButton = new JButton("Delete Flashcard");
+        addButton.setBounds(431, 405, 117, 29);
+        panel.add(addButton);
+
         JButton editButton = new JButton("Edit Flashcard");
+        editButton.setBounds(560, 405, 117, 29);
+        panel.add(editButton);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(previousButton);
-        buttonPanel.add(flipButton);
-        buttonPanel.add(nextButton);
-        buttonPanel.add(addButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(editButton);
+        JButton deleteButton = new JButton("Delete");
+        deleteButton.setBounds(689, 405, 117, 29);
+        panel.add(deleteButton);
 
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        frame.getContentPane().add(panel);
         frame.setVisible(true);
      
 
@@ -123,7 +135,7 @@ public class FlashcardStudyScreen {
     private void updateFlashcardLabel() {
         if (currentFlashcardIndex >= 0 && currentFlashcardIndex < flashcards.size()) {
             Flashcard currentFlashcard = flashcards.get(currentFlashcardIndex);
-            flashcardLabel.setText(currentFlashcard.getQuestion());
+            flashcardTextPane.setText(currentFlashcard.getQuestion());
         }
     }
 
@@ -154,10 +166,10 @@ public class FlashcardStudyScreen {
             Flashcard currentFlashcard = flashcards.get(currentFlashcardIndex);
             String flippedQuestion = currentFlashcard.getAnswer();
             
-            if (flashcardLabel.getText().equals(currentFlashcard.getQuestion())) {
-                flashcardLabel.setText(flippedQuestion);
+            if ( flashcardTextPane.getText().equals(currentFlashcard.getQuestion())) {
+            	 flashcardTextPane.setText(flippedQuestion);
             } else {
-                flashcardLabel.setText(currentFlashcard.getQuestion());
+            	 flashcardTextPane.setText(currentFlashcard.getQuestion());
             }
         }
     }
@@ -197,7 +209,7 @@ public class FlashcardStudyScreen {
                     currentFlashcard.setQuestion(updatedQuestion);
                     currentFlashcard.setAnswer(updatedAnswer);
                     JOptionPane.showMessageDialog(frame, "Flashcard updated successfully.", "Information", JOptionPane.INFORMATION_MESSAGE);
-                    updateFlashcardLabel();
+                    updateFlashcardLabel();                  
                 }
             }
         }

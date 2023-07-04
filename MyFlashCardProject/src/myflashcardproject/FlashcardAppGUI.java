@@ -9,9 +9,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTextArea;
+import javax.swing.ListCellRenderer;
 import javax.swing.JPasswordField;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -19,6 +24,7 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.awt.FlowLayout;
@@ -258,7 +264,57 @@ public class FlashcardAppGUI {
 	        // Create the flashcard list
 	        flashcardListModel = new DefaultListModel<>();
 	        flashcardList = new JList<>(flashcardListModel);
-	
+		    flashcardList.setCellRenderer(new ListCellRenderer<Flashcard>() {
+	            @Override
+	            public Component getListCellRendererComponent(JList<? extends Flashcard> list, Flashcard value, int index, boolean isSelected, boolean cellHasFocus) {
+	                JTextArea label = new JTextArea();
+	                label.setText("Question: " + value.getQuestion() + "\nAnswer: " + value.getAnswer());
+
+	                // Set the color of each line based on the index
+	                if (index % 2 == 0) {
+	                    label.setBackground(Color.WHITE);
+	                } else {
+	                    label.setBackground(Color.LIGHT_GRAY);
+	                }
+
+	                // Set the selection background color
+	                if (isSelected) {
+	                    label.setBackground(list.getSelectionBackground());
+	                }
+
+	                // Set a fixed cell width
+	                int fixedCellWidth = 400; 
+
+	                // Truncate text with ellipsis if it goes beyond the fixed cell width
+	                FontMetrics fontMetrics = label.getFontMetrics(label.getFont());
+	                String question = value.getQuestion();
+	                String answer = value.getAnswer();
+	                String truncatedQuestion = getTruncatedText(question, fontMetrics, fixedCellWidth);
+	                String truncatedAnswer = getTruncatedText(answer, fontMetrics, fixedCellWidth);
+	                label.setText("Question: " + truncatedQuestion + "\nAnswer: " + truncatedAnswer);
+
+	                // Set the preferred size with increased height
+	                int preferredHeight = 40; 
+	                label.setPreferredSize(new Dimension(fixedCellWidth, preferredHeight));
+	                
+	                return label;
+	            }
+	            // Helper method to truncate text with ellipsis
+	            private String getTruncatedText(String text, FontMetrics fontMetrics, int maxWidth) {
+	                if (fontMetrics.stringWidth(text) <= maxWidth) {
+	                    return text;
+	                }
+	                StringBuilder truncatedText = new StringBuilder(text);
+	                int ellipsisWidth = fontMetrics.stringWidth("...");
+	                while (fontMetrics.stringWidth(truncatedText.toString()) + ellipsisWidth > maxWidth) {
+	                    truncatedText.deleteCharAt(truncatedText.length() - 1);
+	                }
+	                return truncatedText.append("...").toString();
+	            }
+	        });
+		    
+		    
+
 	        // Create the buttons
 	        JButton studyButton = new JButton("Study");
 	        JButton addButton = new JButton("Add");
