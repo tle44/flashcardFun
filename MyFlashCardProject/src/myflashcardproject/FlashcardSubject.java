@@ -35,6 +35,10 @@ public class FlashcardSubject  implements Serializable  {
         subject.remove(flashcard);
     }
     
+  
+    
+
+    
     @Override
     public String toString() {
         return "Subject: " + subjectName ;

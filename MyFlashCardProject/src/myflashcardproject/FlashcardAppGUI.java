@@ -1,16 +1,27 @@
 package myflashcardproject;
 
 import java.awt.EventQueue;
+import javax.swing.table.DefaultTableModel;
+import java.awt.BorderLayout;
+
+import javax.swing.plaf.ColorUIResource;
 import javax.swing.DefaultListModel;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JList;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import javax.swing.ListCellRenderer;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.JPasswordField;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -25,6 +36,8 @@ import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.awt.FlowLayout;
@@ -33,11 +46,15 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.border.EmptyBorder;
 
 public class FlashcardAppGUI {
 
 
-	    public JFrame frame;
+		public JFrame frame;
+		
+		
 	    private DefaultListModel<FlashcardSubject> subjectListModel;
 	    private JList<FlashcardSubject> subjectList;
 	    private DefaultListModel<Flashcard> flashcardListModel;
@@ -46,6 +63,25 @@ public class FlashcardAppGUI {
 	    private String password;
 	    private FlashcardApp flashcardApp = new FlashcardApp(); 
 	    private UserAccount userAccount;
+	    private FlashcardSubject subject;
+	    private FlashcardSubject selectedSubject;
+	    private DefaultTableModel flashcardTableModel;
+	    private List<Flashcard> flashcards;
+	    private Flashcard selectedFlashcard;
+	
+		private JTextField usernameField;
+		private JPasswordField passwordField;
+		private JLabel passwordLabel;
+		private JTable flashcardTable;
+		private JFrame editFrame;
+
+	   
+	    private static final Color PRIMARY_COLOR = new Color(52, 152, 219);
+	    private static final Color BACKGROUND_COLOR = new Color(246, 247, 251);
+	    private static final Font LABEL_FONT = new Font("Serif", Font.PLAIN, 24);
+	    private static final Font FIELD_FONT = new Font("Serif", Font.PLAIN, 20);
+	    private static final Color textColor = new Color(46, 56, 86); 
+	    private static final Color buttonColor = new Color(253, 205, 30);
 	    
 
 	    
@@ -56,53 +92,94 @@ public class FlashcardAppGUI {
 	    }
 
 	    private void initializeLoginScreen() {
-	    	frame = new JFrame("Flashcard App - Login");
-	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	        frame.setSize(400, 300);
-	        frame.getContentPane().setLayout(new BorderLayout());
+	    	frame = new JFrame();
+	    	
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.getContentPane().setLayout(null);
+			frame.setSize(710, 500);
+			
+			frame.getContentPane().setBackground(BACKGROUND_COLOR);
+			
+			JLabel usernameLabel = new JLabel("Username");
+			usernameLabel.setFont(LABEL_FONT);
+			usernameLabel.setBounds(81, 146, 108, 42);
+			usernameLabel.setForeground(textColor);
+			frame.getContentPane().add(usernameLabel);
+			
+			passwordLabel = new JLabel("Password");
+			passwordLabel.setFont(LABEL_FONT);
+			passwordLabel.setBounds(81, 226, 108, 34);
+			passwordLabel.setForeground(textColor);
+			frame.getContentPane().add(passwordLabel);
+			
+			usernameField = new JTextField();
+			usernameField.setBounds(229, 146, 340, 49);
+			frame.getContentPane().add(usernameField);
+			usernameField.setColumns(10);
+			
+			passwordField = new JPasswordField();
+			passwordField.setColumns(10);
+			passwordField.setBounds(229, 222, 340, 49);
+			frame.getContentPane().add(passwordField);
+			
+			JButton loginButton = new JButton("Login");
+			loginButton.setFont(LABEL_FONT);
+			loginButton.setBounds(228, 321, 129, 49);
+			buttonCustom(loginButton);
+		
+			frame.getContentPane().add(loginButton);
+			
+			JButton registerButton = new JButton("Register");
+			registerButton.setFont(LABEL_FONT);
+			registerButton.setBounds(440, 321, 129, 49);
+			buttonCustom(registerButton);
+			frame.getContentPane().add(registerButton);
+			
+			JLabel welcomeLabel = new JLabel("Welcome to Flashcard Fun");
+			welcomeLabel.setFont(LABEL_FONT);
+			welcomeLabel.setBounds(229, 41, 268, 34);
+			welcomeLabel.setForeground(textColor);
+			frame.getContentPane().add(welcomeLabel);
+			
+			loginButton.addActionListener(new ActionListener() {
+			    public void actionPerformed(ActionEvent e) {
+			        String username = usernameField.getText();
+			        String password = new String(passwordField.getPassword());
 
-	        JPanel loginPanel = new JPanel();
+			        // Check if username or password is empty
+			        if (username.isEmpty() || password.isEmpty()) {
+			            JOptionPane.showMessageDialog(frame, "Please enter a username and password!", "Error", JOptionPane.ERROR_MESSAGE);
+			            return; // Exit the method to prevent further execution
+			        }
 
-	        JLabel usernameLabel = new JLabel("Username:");
-	        usernameLabel.setBounds(152, 35, 66, 16);
-	        JLabel passwordLabel = new JLabel("Password:");
-	        passwordLabel.setBounds(155, 101, 63, 16);
-	        JTextField usernameField = new JTextField(25);
-	        usernameField.setBounds(6, 63, 388, 26);
-	        JPasswordField passwordField = new JPasswordField(20);
-	        passwordField.setBounds(6, 129, 388, 26);
+			        // Call the authentication method to validate user credentials
+			        UserAccount user = authenticateUser(username, password);
 
-	        JButton loginButton = new JButton("Login");
-	        loginButton.setBounds(104, 167, 79, 29);
-	        JButton registerButton = new JButton("Register");
-	        registerButton.setBounds(207, 167, 95, 29);
+			        if (user != null) {
+			            JOptionPane.showMessageDialog(frame, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+			            frame.dispose();
+			            //load flashcard data from user account
+			            userAccount.loadFlashcards(username);
+			            launchSubjectScreen();
+			        } else {
+			            JOptionPane.showMessageDialog(frame, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
+			        }
 
-	        loginButton.addActionListener(new ActionListener() {
-	            public void actionPerformed(ActionEvent e) {
-	                String username = usernameField.getText();
-	                String password = new String(passwordField.getPassword());
+			        flashcardApp.loadAccountsFromFile();
+			    }
+			});
 
-	                // Call the authentication method to validate user credentials
-	                	UserAccount user = authenticateUser(username, password);
-
-	                if (user != null) {
-	                    JOptionPane.showMessageDialog(frame, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-	                    frame.dispose();
-	                    //load flashcard data from user account
-	                    userAccount.loadFlashcards(username);
-	                    launchSubjectScreen();
-	                } else {
-	                    JOptionPane.showMessageDialog(frame, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
-	                }
-	                
-	                flashcardApp.loadAccountsFromFile();
-	            }
-	        });
 
 	        registerButton.addActionListener(new ActionListener() {
 	            public void actionPerformed(ActionEvent e) {
 	                username = usernameField.getText();
 	                password = new String(passwordField.getPassword());
+	                
+	                // Check if username or password is empty
+			        if (username.isEmpty() || password.isEmpty()) {
+			            JOptionPane.showMessageDialog(frame, "Please enter a username and password for registration", "Error", JOptionPane.ERROR_MESSAGE);
+			            return; // Exit the method to prevent further execution
+			        }
 
 	                // Call the registration method to create a new user account
 	                boolean registrationSuccess = registerUser(username, password);
@@ -119,21 +196,14 @@ public class FlashcardAppGUI {
 	                flashcardApp.loadAccountsFromFile();
 	            }
 	        });
-	        loginPanel.setLayout(null);
-	        loginPanel.add(usernameLabel);
-	        loginPanel.add(usernameField);
-	        loginPanel.add(passwordLabel);
-	        loginPanel.add(passwordField);
-	        loginPanel.add(loginButton);
-	        loginPanel.add(registerButton);
-	        frame.getContentPane().add(loginPanel, BorderLayout.CENTER);
+
 	        
 
 	    }
-	    
 	        
 
 	    private UserAccount authenticateUser(String username, String password) {
+	    	
 	    	if (flashcardApp.accountExistsInFile(username)&& (flashcardApp.getAccount(username)).authenticate(password)) {
 	    		userAccount = flashcardApp.getAccount(username);
 	    		return userAccount;
@@ -157,18 +227,54 @@ public class FlashcardAppGUI {
 	    
 	    public void launchSubjectScreen() {
 	        // Create the main frame
-	        frame = new JFrame("Flashcard App");
-	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	        frame.setSize(500, 400);
+	    	 frame = new JFrame("Flashcard App");
+	    	 frame.setSize(1650,1080);	    	
+	    	 frame.setVisible(true);
+
 
 	        // Create the subject list
 	        subjectListModel = new DefaultListModel<>();
 	        subjectList = new JList<>(subjectListModel);
+	        subjectList.setCellRenderer(new DefaultListCellRenderer() {
+
+                @Override
+                public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {                
+                	JLabel renderer = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    // Set the font and size of the text
+                    renderer.setFont(FIELD_FONT); // Customize the font and size
+                    // Set the background color based on the row index
+                    if (index % 2 == 0) {
+                        renderer.setBackground(BACKGROUND_COLOR);
+                    } else {
+                        renderer.setBackground(Color.WHITE);
+                    }
+                    // Set the preferred height of the renderer component
+					int customHeight = 50;  // Customize the desired height
+			        renderer.setPreferredSize(new Dimension(renderer.getPreferredSize().width, customHeight));
+                
+			        // Set the text color
+			        renderer.setForeground(textColor); // Customize the desired text color
+			        
+					return renderer;
+                }
+
+           });
+	            
+
+	       
+	       
+	   
 
 	        // Create the buttons	      
 	        JButton studyButton = new JButton("Study Flashcards");
+	        buttonCustom(studyButton);
+	        
+	        
 	        JButton addButton = new JButton("Add Subject");
+	        buttonCustom(addButton);
+	        
 	        JButton deleteButton = new JButton("Delete Subject");
+	        buttonCustom(deleteButton);
 
 	        // Create the panel for the buttons
 	        JPanel buttonPanel = new JPanel();
@@ -216,16 +322,29 @@ public class FlashcardAppGUI {
 
 	        // Load the flashcard subjects
 	        loadSubjects();
-
-	        // Show the main frame
-	        frame.setVisible(true);
 	        
+
+	        
+	    }
+	    public void buttonCustom(JButton button) {
+	        button.setFont(LABEL_FONT);
+	        button.setForeground(textColor);
+	        button.setOpaque(true);
+	        button.setContentAreaFilled(true);
+	        button.setBorderPainted(false);
+	        button.setFocusPainted(false);
+	        button.setBackground(buttonColor);
+	        button.setForeground(textColor);
+	    }
+	    public void buttonCustom2(JButton button) {
+	        button.setBackground(Color.WHITE);
+	        button.setForeground(buttonColor);
 	    }
 	    
 	    public void addSubject() {
 	        String subjectName = JOptionPane.showInputDialog(frame, "Enter subject name:");
 	        if (subjectName != null && !subjectName.isEmpty()) {
-	            FlashcardSubject subject = new FlashcardSubject(subjectName);
+	            subject = new FlashcardSubject(subjectName);
 	            userAccount.addSubject(subject);
 	            subjectListModel.addElement(subject);
                 userAccount.saveFlashcards(username);
@@ -250,88 +369,59 @@ public class FlashcardAppGUI {
 	        }
 	    }  
 	    //=============================================    
-	    public void displaySubjectFlashcards() {
-	    	int selectedIndex = subjectList.getSelectedIndex();
-	        if (selectedIndex != -1) {
-	            FlashcardSubject selectedSubject = subjectListModel.getElementAt(selectedIndex);
-	            List<Flashcard> flashcards = selectedSubject.getFlashcards();
+	    public void displaySubjectFlashcards() { 
+	            int selectedIndex = subjectList.getSelectedIndex();
+	            if (selectedIndex != -1) {
+	                selectedSubject = subjectListModel.getElementAt(selectedIndex);
+	                List<Flashcard> flashcards = selectedSubject.getFlashcards();
+
+	                // Create the main frame
+	                frame = new JFrame("Flashcards - " + selectedSubject.getSubjectName());
+	                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	                frame.setSize(1650, 1080);
+
+	                // Create the flashcard table model
+	                flashcardTableModel = new DefaultTableModel(new Object[]{"Question", "Answer"}, 0);
+	                flashcardTable = new JTable(flashcardTableModel);
+
+	                // Customize the table appearance
+	                flashcardTable.setFont(FIELD_FONT); // Customize the font and size
+	                flashcardTable.setRowHeight(60); // Customize the row height
+	                flashcardTable.setBackground(BACKGROUND_COLOR);
+	                flashcardTable.setForeground(textColor); // Customize the text color
+
+	                // Add flashcards to the table model
+	                for (Flashcard flashcard : flashcards) {
+	                    flashcardTableModel.addRow(new Object[]{flashcard.getQuestion(), flashcard.getAnswer()});
+	                }
+
+	                // Add the table to a scroll pane
+	                JScrollPane scrollPane = new JScrollPane(flashcardTable);
+	                // Create the buttons
+	    	        JButton studyButton = new JButton("Study Flashcards");
+	    	        buttonCustom(studyButton);
+	    	        JButton addButton = new JButton("Add Flashcard");
+	    	        buttonCustom(addButton);
+	    	        JButton deleteButton = new JButton("Delete Flashcard");
+	    	        buttonCustom(deleteButton);
+	    	        JButton editButton = new JButton("Edit Flashcard");
+	    	        buttonCustom(editButton);
+	    	
+	    	        // Create the panel for the buttons
+	    	        JPanel buttonPanel = new JPanel();
+	    	        buttonPanel.add(studyButton);
+	    	        buttonPanel.add(addButton);
+	    	        buttonPanel.add(deleteButton);
+	    	        buttonPanel.add(editButton);
+
+	                // Add the scroll pane to the frame
+	                frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+	                frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+
+	                // Show the main frame
+	                frame.setVisible(true);
 	            
-		    // Create the main frame
-	        frame = new JFrame("Flashcards - " + selectedSubject.getSubjectName());
-	        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	        frame.setSize(600, 500);
-	
-	        // Create the flashcard list
-	        flashcardListModel = new DefaultListModel<>();
-	        flashcardList = new JList<>(flashcardListModel);
-		    flashcardList.setCellRenderer(new ListCellRenderer<Flashcard>() {
-	            @Override
-	            public Component getListCellRendererComponent(JList<? extends Flashcard> list, Flashcard value, int index, boolean isSelected, boolean cellHasFocus) {
-	                JTextArea label = new JTextArea();
-	                label.setText("Question: " + value.getQuestion() + "\nAnswer: " + value.getAnswer());
 
-	                // Set the color of each line based on the index
-	                if (index % 2 == 0) {
-	                    label.setBackground(Color.WHITE);
-	                } else {
-	                    label.setBackground(Color.LIGHT_GRAY);
-	                }
-
-	                // Set the selection background color
-	                if (isSelected) {
-	                    label.setBackground(list.getSelectionBackground());
-	                }
-
-	                // Set a fixed cell width
-	                int fixedCellWidth = 400; 
-
-	                // Truncate text with ellipsis if it goes beyond the fixed cell width
-	                FontMetrics fontMetrics = label.getFontMetrics(label.getFont());
-	                String question = value.getQuestion();
-	                String answer = value.getAnswer();
-	                String truncatedQuestion = getTruncatedText(question, fontMetrics, fixedCellWidth);
-	                String truncatedAnswer = getTruncatedText(answer, fontMetrics, fixedCellWidth);
-	                label.setText("Question: " + truncatedQuestion + "\nAnswer: " + truncatedAnswer);
-
-	                // Set the preferred size with increased height
-	                int preferredHeight = 40; 
-	                label.setPreferredSize(new Dimension(fixedCellWidth, preferredHeight));
-	                
-	                return label;
-	            }
-	            // Helper method to truncate text with ellipsis
-	            private String getTruncatedText(String text, FontMetrics fontMetrics, int maxWidth) {
-	                if (fontMetrics.stringWidth(text) <= maxWidth) {
-	                    return text;
-	                }
-	                StringBuilder truncatedText = new StringBuilder(text);
-	                int ellipsisWidth = fontMetrics.stringWidth("...");
-	                while (fontMetrics.stringWidth(truncatedText.toString()) + ellipsisWidth > maxWidth) {
-	                    truncatedText.deleteCharAt(truncatedText.length() - 1);
-	                }
-	                return truncatedText.append("...").toString();
-	            }
-	        });
-		    
-		    
-
-	        // Create the buttons
-	        JButton studyButton = new JButton("Study");
-	        JButton addButton = new JButton("Add");
-	        JButton deleteButton = new JButton("Delete");
-	
-	        // Create the panel for the buttons
-	        JPanel buttonPanel = new JPanel();
-	        buttonPanel.add(studyButton);
-	        buttonPanel.add(addButton);
-	        buttonPanel.add(deleteButton);
-	   
-	
-	        // Add components to the main frame
-	        frame.getContentPane().setLayout(new BorderLayout());
-	        frame.getContentPane().add(new JScrollPane(flashcardList), BorderLayout.CENTER);
-	        frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-	 
 	        // Register action listeners for the buttons
 	        addButton.addActionListener(new ActionListener() {
 	            @Override
@@ -347,13 +437,11 @@ public class FlashcardAppGUI {
 	            }
 	        });
 	        
-	     // Register action listener for flashcard selection	        
-	        flashcardList.addMouseListener(new MouseAdapter() {
+
+	        editButton.addActionListener(new ActionListener() {
 	            @Override
-	            public void mouseClicked(MouseEvent e) {
-	                if (e.getClickCount() == 2) {
-	                    editFlashcard();
-	                }
+	            public void actionPerformed(ActionEvent e) {
+	                editFlashcard();
 	            }
 	        });
 	        
@@ -365,64 +453,162 @@ public class FlashcardAppGUI {
             }
         });
         
-	        
-	        // Load the flashcard subjects
-	        loadFlashcards(selectedSubject);
 	
 	        // Show the main frame
 	        frame.setVisible(true);
 	        
-	    }     
-	}
+	    }     }
+	
     
     public void addFlashcard(FlashcardSubject selectedSubject) {
     	String question = JOptionPane.showInputDialog(frame, "Enter the question:");
    	 	String answer = JOptionPane.showInputDialog(frame, "Enter the answer:");	 	
 	   	 if (question != null && answer != null && !question.isEmpty() && !answer.isEmpty()) {
+	   		
 	         Flashcard flashcard = new Flashcard(question, answer);
 	         selectedSubject.addFlashcard(flashcard);
-	         flashcardListModel.addElement(flashcard);
+	         flashcardTableModel.addRow(new Object[]{flashcard.getQuestion(), flashcard.getAnswer()});
+
 	         userAccount.saveFlashcards(username);
 	     }
     }
 
     public void deleteFlashcard(FlashcardSubject selectedSubject) {
-        int selectedIndex = flashcardList.getSelectedIndex();
-        if (selectedIndex != -1) {
-            Flashcard selectedFlashcard = flashcardListModel.getElementAt(selectedIndex);
-            selectedSubject.removeFlashcard(selectedFlashcard);
-            flashcardListModel.remove(selectedIndex);
-            userAccount.saveFlashcards(username);
-        }
+    	 int selectedIndex = flashcardTable.getSelectedRow();
+    	    if (selectedIndex != -1) {
+    	        List<Flashcard> flashcards = selectedSubject.getFlashcards();
+    	        if (selectedIndex < flashcards.size()) {
+    	            Flashcard selectedFlashcard = flashcards.get(selectedIndex);
+    	            selectedSubject.removeFlashcard(selectedFlashcard);
+    	            flashcardTableModel.removeRow(selectedIndex);
+    	            userAccount.saveFlashcards(username);
+    	        }
+    	    }
     }
     
-    public void editFlashcard() {
-        int selectedIndex = flashcardList.getSelectedIndex();
-        if (selectedIndex != -1) {
-            Flashcard selectedFlashcard = flashcardListModel.getElementAt(selectedIndex);
-            String newQuestion = JOptionPane.showInputDialog(frame, "Enter the new question:", selectedFlashcard.getQuestion());
-            String newAnswer = JOptionPane.showInputDialog(frame, "Enter the new answer:", selectedFlashcard.getAnswer());
 
-            if (newQuestion != null && newAnswer != null && !newQuestion.isEmpty() && !newAnswer.isEmpty()) {
-                selectedFlashcard.setQuestion(newQuestion);
-                selectedFlashcard.setAnswer(newAnswer);
-                flashcardListModel.setElementAt(selectedFlashcard, selectedIndex);
-                userAccount.saveFlashcards(username);
+    public void editFlashcard() {
+        int selectedRow = flashcardTable.getSelectedRow();
+        if (selectedRow != -1) {
+            flashcards = selectedSubject.getFlashcards();
+            if (selectedRow < flashcards.size()) {
+                selectedFlashcard = flashcards.get(selectedRow);
+                int questionColumnIndex = 0; 
+                int answerColumnIndex = 1; 
+                
+                // Create a dialog window for editing
+                JDialog editDialog = new JDialog();
+                editDialog.setTitle("Edit Flashcard");
+                editDialog.setSize(400, 200);
+                editDialog.setLayout(new BorderLayout());
+
+                // Create question label and text field
+                JLabel questionLabel = new JLabel("Question:");
+                JTextArea questionField = new JTextArea(selectedFlashcard.getQuestion());
+
+                // Create answer label and text field
+                JLabel answerLabel = new JLabel("Answer:");
+                JTextArea answerField = new JTextArea(selectedFlashcard.getAnswer());
+
+                // Create update button
+                JButton updateButton = new JButton("Update");
+                buttonCustom(updateButton);
+               
+                updateButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String newQuestion = questionField.getText();
+                        selectedFlashcard.setQuestion(newQuestion);
+                        flashcardTableModel.setValueAt(newQuestion, selectedRow, questionColumnIndex);
+
+                        String newAnswer = answerField.getText();
+                        selectedFlashcard.setAnswer(newAnswer);
+                        flashcardTableModel.setValueAt(newAnswer, selectedRow, answerColumnIndex);
+
+                        editFrame.dispose();
+
+                        //update the flashcards list
+                        flashcards.set(selectedRow, selectedFlashcard);
+                        userAccount.saveFlashcards(username);
+                    }
+                });
+ 
+
+     
+
+                // Create the frame
+                editFrame = new JFrame("Edit Frame");
+
+                // Create the panel
+                JPanel panel = new JPanel(new GridBagLayout());
+                panel.setBackground(BACKGROUND_COLOR);
+                // Set the desired margins
+                int topMargin = 20;
+                int leftMargin = 20;
+                int bottomMargin = 20;
+                int rightMargin = 20;
+
+                // Create an EmptyBorder with the specified margins
+                EmptyBorder border = new EmptyBorder(topMargin, leftMargin, bottomMargin, rightMargin);
+
+                // Set the border for the panel
+                panel.setBorder(border);
+
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.gridx = 0;
+                gbc.gridy = 0;
+                panel.add(questionLabel, gbc);
+                questionLabel.setFont(LABEL_FONT);
+
+                gbc.gridx = 1;
+                gbc.gridwidth = 1;
+                gbc.weightx = 1.0;
+                gbc.weighty = 1.0;
+                gbc.fill = GridBagConstraints.BOTH;
+              
+                questionField.setLineWrap(true); // Enable text wrapping
+                JScrollPane questionScrollPane = new JScrollPane(questionField);
+                panel.add(questionScrollPane, gbc);
+                questionField.setFont(FIELD_FONT);
+
+                gbc.gridx = 0;
+                gbc.gridy = 1;
+                gbc.gridwidth = 1;
+                gbc.weightx = 0.0;
+                gbc.weighty = 0.0;
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                panel.add(answerLabel, gbc);
+                answerLabel.setFont(LABEL_FONT);
+
+                gbc.gridx = 1;
+                gbc.gridwidth = 1;
+                gbc.weightx = 1.0;
+                gbc.weighty = 1.0;
+                gbc.fill = GridBagConstraints.BOTH;
+               
+                answerField.setLineWrap(true); // Enable text wrapping
+                JScrollPane answerScrollPane = new JScrollPane(answerField);
+                panel.add(answerScrollPane, gbc);
+                answerField.setFont(FIELD_FONT);
+
+                gbc.gridx = 1;
+                gbc.gridy = 2;
+                gbc.gridwidth = 2;
+                gbc.weightx = 0.0;
+                gbc.weighty = 0.0;
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                panel.add(updateButton, gbc);
+                
+                editFrame.add(panel);
+                editFrame.setSize(600, 400); // Set the size of the frame
+                editFrame.setVisible(true);
+   
+            
             }
         }
     }
-    
-    public void loadFlashcards(FlashcardSubject selectedSubject) {
-        List<Flashcard> flashcards;
-        flashcards = selectedSubject.getFlashcards();
-        for (Flashcard flashcard : flashcards) {
-            flashcardListModel.addElement(flashcard);
-            userAccount.saveFlashcards(username);
-        }
-    }  
-	    
 
-	    
     public void studyFlashcards() {
         int selectedIndex = subjectList.getSelectedIndex();
         if (selectedIndex != -1) {
@@ -433,18 +619,14 @@ public class FlashcardAppGUI {
                 JOptionPane.showMessageDialog(frame, "No flashcards available for the selected subject.", "Information", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 // Create a flashcard study screen and pass the flashcards to it
-                FlashcardStudyScreen studyScreen = new FlashcardStudyScreen(flashcards, flashcardListModel);
+                FlashcardStudyScreen studyScreen = new FlashcardStudyScreen(flashcards, flashcardTableModel,userAccount, username);
                 studyScreen.startStudy();
                 userAccount.saveFlashcards(username);
             }
         }
-    }
-
-	   
-	   
-}  
-	    
-	    
+    }	   
+}
+	    	
 	   
 	        
 	            

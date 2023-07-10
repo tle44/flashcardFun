@@ -29,6 +29,7 @@ public class Flashcard  implements Serializable  {
 		this.answer = answer;
 	}
 	
+
 	//print FlashCard 
 	public void printFlashCard() {
 		System.out.println("Question: " +  question);
